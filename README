@@ -23,5 +23,7 @@ After that you upload the .IDE file to your own ESP32. Be sure to change the SSI
 
 After that you can go to the website on your phone, request the use of JavaScript events with the button and enjoy.
 
+A video about this project can be seen on my YouTube: https://www.youtube.com/watch?v=j7zaMYurnrc&t=1s
+
 
 # Note that these scripts are VERY inefficient and might crash some webservers. It is reading and writing a whole lot of data to the database in a very short amount of time. Not really what it's meant to be used for.
