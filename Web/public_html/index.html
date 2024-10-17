@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Scoopy115's Send Orientation Data</title>
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    h1, p, button {
+      margin: 10px; /* Add some margin for better spacing */
+    }
+  </style>
+</head>
+<body>
+  <h1>Scoopy115's Send Orientation Data v1.4</h1>
+  <p> Currently sending 1000 requests per second (every 1ms)</p>
+
+  <button id="sendButton">Request To Send Orientation Data</button>
+
+  <script>
+    let isSendingData = false;
+    let requestCounter = 0;
+    const maxRequestsPerSecond = 1000; // Maximum requests allowed per second
+    const interval = 1000; // Time window (in milliseconds) for the request limit
+
+    document.getElementById('sendButton').addEventListener('click', function() {
+      if (!isSendingData) {
+        isSendingData = true;
+
+        // Check if the DeviceOrientationEvent is supported
+        if (window.DeviceOrientationEvent) {
+          // Request permission for device orientation (iOS)
+          if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+            DeviceOrientationEvent.requestPermission()
+              .then(permissionState => {
+                if (permissionState === 'granted') {
+                  startDeviceOrientation();
+                } else {
+                  console.log('Permission denied for device orientation.');
+                  isSendingData = false;
+                }
+              })
+              .catch(error => {
+                console.error('Error requesting permission:', error);
+                isSendingData = false;
+              });
+          } else {
+            // Device orientation supported, but no need for permission (non-iOS or modern browsers)
+            startDeviceOrientation();
+          }
+        } else {
+          console.log('Device orientation not supported on this device.');
+          isSendingData = false;
+        }
+      }
+    });
+
+    function startDeviceOrientation() {
+      window.addEventListener('deviceorientation', handleDeviceOrientation);
+      console.log('Device Orientation started.');
+    }
+
+    function handleDeviceOrientation(event) {
+      requestCounter++;
+
+      if (requestCounter <= maxRequestsPerSecond) {
+        const alpha = event.alpha; // Yaw (compass direction)
+        const beta = event.beta;   // Pitch (front-to-back tilt)
+        const gamma = event.gamma; // Roll (left-to-right tilt)
+
+        // Log orientation data in console for debuging
+        // console.log(`Alpha: ${alpha}, Beta: ${beta}, Gamma: ${gamma}`);
+
+        // Send data to the server
+        sendOrientationData(alpha, beta, gamma);
+      }
+
+      if (requestCounter === maxRequestsPerSecond) {
+        setTimeout(() => {
+          requestCounter = 0;
+          isSendingData = false;
+        }, interval);
+      }
+    }
+
+    function sendOrientationData(alpha, beta, gamma) {
+      fetch('scripts/save-orientation.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ alpha, beta, gamma }),
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to send orientation data.');
+        }
+        console.log('Orientation data sent successfully.');
+      })
+      .catch(error => {
+        console.error('Error sending orientation data:', error);
+      });
+    }
+  </script>
+</body>
+</html>

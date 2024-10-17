@@ -1,0 +1,27 @@
+# About this project
+
+I wanted to learn how to use the ESP32 microcontroller, as it’s very similar to Arduino but more powerful and it has WiFi/Bluetooth capabilities. I knew I also wanted to integrate a smartphone in this project, because modern smartphones have really cool JavaScript webbrowser functionality (like DeviceOrientationEvent used in this project).
+
+Figuring out how to get the gyro data of an iPhone and using it to control LEDs, servos, or any other hobby electronics with ESP32 wasn’t as easy at it first seemed. My main roadblock at the start was that the ESP32 doesn’t support HTTPS/SSL, which is required by almost all modern browsers to run JavaScript events.
+I want this project to be as accessible as possible, so using a generic gyro sensor and hooking it up to the ESP32 would completely break the whole purpose.
+
+After lots of tinkering with different tools, I decided the most approachable way for me to get the data from the iPhone to the ESP32 was by using a MySQL database through a public website (I didn't have the ability to use API endpoints on this webserver). The smartphone’s gyroscope data gets sent off to the database with the use of JavaScript and PHP, this happens about 1000x a second (every 1ms). The ESP32 then does an HTTPrequest to the webserver and gets the gyroscope values from the database through PHP as JSON Data, this happens about every 100ms.
+
+You might think “Why upload gyro data 100 times more than the ESP32 can request?”, but I found out through trial and error that it works better this way.
+
+The ESP32 then maps the Gamma (Roll) and Beta (Pitch) data to the 0 – 180 values of the appropriate servomotor. The HTTPrequests are running on Core 0 and the controlling of the servos is running on Core 1, this is to spread out the amount of calculations the ESP32 has to do. This didn't really matter much for performance though.
+
+For some reason the ESP32 freezes/loses connection to the server about every 10 seconds and I have yet to figure out why that is. This proof of concept works great though! And I am very happy with the results I was able to accomplish in roughly 55-60 hours of work.
+
+For my next iteration I want to use API to properly control the servos and get better stability and reliability.
+
+# Setup
+
+To get your own ESP32 working with my code. You have to set up a website with a database connected to it (mySQL setup query is included). Then change the PHP scripts to include your database and website usernames, passwords, naming, etc.
+
+After that you upload the .IDE file to your own ESP32. Be sure to change the SSID and Password to those of your router (must be a 2.4 GHz network obviously), and add the domain or IP address to your website in the code. The pins used on the ESP32 can be found in this file as well, they are defined at the top of the code. The libraries I used are also included, but you also need the ESP32 boards installed.
+
+After that you can go to the website on your phone, request the use of JavaScript events with the button and enjoy.
+
+
+# Note that these scripts are VERY inefficient and might crash some webservers. It is reading and writing a whole lot of data to the database in a very short amount of time. Not really what it's meant to be used for.

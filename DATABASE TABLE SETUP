@@ -1,0 +1,7 @@
+CREATE TABLE orientation_data (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    alpha FLOAT NOT NULL,
+    beta FLOAT NOT NULL,
+    gamma FLOAT NOT NULL,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
